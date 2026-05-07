@@ -1,148 +1,122 @@
 <!DOCTYPE html>
 <html lang="en-us">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | CryptoHunter</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>CryptoHunter</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico" />
+    <link rel="stylesheet" href="TemplateData/style.css" />
   </head>
-  <body>
-    <div id="unity-container" style="width: 100%; height: 100%">
-      <canvas id="unity-canvas" width=auto height=auto"></canvas>
+  <body class="light">
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas"></canvas>
+    </div>
+    <div id="loading-cover" style="display: none">
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-empty" style="display: none">
           <div id="unity-progress-bar-full"></div>
         </div>
+        <div class="spinner"></div>
       </div>
-      <!-- <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">CryptoHunter</div>
-      </div> -->
     </div>
-    <script>
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var warningBanner = document.querySelector("#unity-warning");
+    <div id="unity-fullscreen-button" style="display: none"></div>
+    <script type="module">
+            const hideFullScreenButton = "";
+            const buildUrl = "Build";
+            const loaderUrl = buildUrl + "/1a127f9e464e15330e26a8285afbed1e.loader.js";
+            const config = {
+              dataUrl: buildUrl + "/d4e38738ea4673facc62126c021e12f2.data.unityweb",
+              frameworkUrl: buildUrl + "/e4c4a73a17cf273047b8705bf0399995.framework.js.unityweb",
+              codeUrl: buildUrl + "/a55ec07c33cffbada456ac267f668502.wasm.unityweb",
+              streamingAssetsUrl: "StreamingAssets",
+              companyName: "DefaultCompany",
+              productName: "CryptoHunter",
+              productVersion: "1.0",
+              autoSyncPersistentDataPath: true,
+            };
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-      // --- Removing Scrollbar
-      document.body.scrollTop = 0;
-      document.body.style.overflow = 'hidden';
-      // --- --- --- --- --- --- ---
-      
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/5821fa388fe8a9c85d7dab7c969b451c.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/12979759fa111f9b4d2744a26b60aa66.data.unityweb",
-        frameworkUrl: buildUrl + "/c7dfb09189f840e662614bdcbd8d26bc.framework.js.unityweb",
-        codeUrl: buildUrl + "/aa49c3970b5f4d86bf0b460ac3386ade.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "CryptoHunter",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-        autoSyncPersistentDataPath: true,
-      };
+            const container = document.querySelector("#unity-container");
+            const canvas = document.querySelector("#unity-canvas");
+            const loadingCover = document.querySelector("#loading-cover");
+            const progressBarEmpty = document.querySelector("#unity-progress-bar-empty");
+            const progressBarFull = document.querySelector("#unity-progress-bar-full");
+            const fullscreenButton = document.querySelector("#unity-fullscreen-button");
+            const spinner = document.querySelector('.spinner');
 
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
+            const canFullscreen = (function() {
+              for (const key of [
+                  'exitFullscreen',
+                  'webkitExitFullscreen',
+                  'webkitCancelFullScreen',
+                  'mozCancelFullScreen',
+                  'msExitFullscreen',
+                ]) {
+                if (key in document) {
+                  return true;
+                }
+              }
+              return false;
+            }());
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        container.className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-        unityShowBanner('WebGL builds are not supported on mobile devices.');
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-      }
-
-      loadingBar.style.display = "block";
-
-      // WebGL動画自動再生のためにAudioContextを事前に初期化
-      var initAudioContext = function() {
-        try {
-          var AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (AudioContext) {
-            var audioContext = new AudioContext();
-            if (audioContext.state === 'suspended') {
-              audioContext.resume().then(function() {
-                console.log('AudioContext resumed successfully for video autoplay');
-              }).catch(function(e) {
-                console.warn('Failed to resume AudioContext:', e);
-              });
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+              container.className = "unity-mobile";
+              config.devicePixelRatio = 1;
             }
-          }
-        } catch (e) {
-          console.warn('AudioContext initialization failed:', e);
-        }
-      };
-      
-      // ページロード時とユーザーインタラクション時にAudioContextを初期化
-      initAudioContext();
-      document.addEventListener('click', initAudioContext, { once: true });
-      document.addEventListener('touchstart', initAudioContext, { once: true });
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          //fullscreenButton.onclick = () => {
-          //  unityInstance.SetFullscreen(1);
-          //};
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
+            loadingCover.style.display = "";
+            
+            // WebGL動画自動再生のためにAudioContextを事前に初期化
+            const initAudioContext = () => {
+              try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                  const audioContext = new AudioContext();
+                  if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                      console.log('AudioContext resumed successfully for video autoplay');
+                    }).catch((e) => {
+                      console.warn('Failed to resume AudioContext:', e);
+                    });
+                  }
+                }
+              } catch (e) {
+                console.warn('AudioContext initialization failed:', e);
+              }
+            };
+            
+            // ページロード時とユーザーインタラクション時にAudioContextを初期化
+            initAudioContext();
+            document.addEventListener('click', initAudioContext, { once: true });
+            document.addEventListener('touchstart', initAudioContext, { once: true });
+            
+            const script = document.createElement("script");
+            script.src = loaderUrl;
+            script.onload = () => {
+              import('./lib/thirdweb-unity-bridge.js').then(module => {
+                createUnityInstance(canvas, config, (progress) => {
+                  spinner.style.display = "none";
+                  progressBarEmpty.style.display = "";
+                  progressBarFull.style.width = `${100 * progress}%`;
+                }).then((unityInstance) => {
+                  loadingCover.style.display = "none";
+                  if (canFullscreen) {
+                    if (!hideFullScreenButton) {
+                      fullscreenButton.style.display = "";
+                    }
+                    fullscreenButton.onclick = () => {
+                      unityInstance.SetFullscreen(1);
+                    };
+                  }
+                }).catch((message) => {
+                  alert(message);
+                });
+              });
+            };
+            document.body.appendChild(script);
     </script>
   </body>
 </html>
